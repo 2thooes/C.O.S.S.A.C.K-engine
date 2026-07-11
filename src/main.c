@@ -17,6 +17,7 @@ typedef struct{
     int enPassant;
     int halfmoveClock;
 } Board;
+
 // testing function
 void print_board(const Board *board) {
     printf("\n  +---+---+---+---+---+---+---+---+\n");
