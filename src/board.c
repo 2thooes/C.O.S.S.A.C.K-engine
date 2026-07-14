@@ -1,10 +1,9 @@
-// board.c
 #include "board.h"
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
 #include <stdlib.h>
-
+//Prints board for debug
 void printBoard(const Board *board) {
     printf("\n  +---+---+---+---+---+---+---+---\n");
     for (int rank = 7; rank >= 0; rank--) {
@@ -33,7 +32,7 @@ void printBoard(const Board *board) {
     printf("    a   b   c   d   e   f   g   h\n\n");
     printf("    Turn: %s\n", board->isWhiteTurn ? "White" : "Black");
 }
-
+//Sets default starting position
 void setStartpos(Board *board) {
     memset(board, 0, sizeof(Board));
 
@@ -61,7 +60,7 @@ void setStartpos(Board *board) {
     board->halfmoveClock = 0;
 }
 
-// Fixed name from parseFen to parse_fen
+// Function parse fen for not standart setup
 void parseFen(Board *board, const char *fen) {
     memset(board, 0, sizeof(Board));
 
@@ -162,6 +161,7 @@ void modifyStartpos(Board *board, char *argument) {
 
     int moved_piece_type = -1;
 
+    // Ищем, какая фигура ходит
     for (int type = 0; type < 6; type++) {
         if (board->pieces[us][type] & from_mask) {
             board->pieces[us][type] &= ~from_mask;
@@ -172,6 +172,35 @@ void modifyStartpos(Board *board, char *argument) {
 
     if (moved_piece_type == -1) return;
 
+    // Сохраняем текущее состояние enPassant перед тем, как его стереть
+    int current_ep = board->enPassant;
+    
+    // Сбрасываем enPassant по умолчанию для этого хода
+    board->enPassant = -1;
+
+    // --- ОБРАБОТКА ХОДОВ ПЕШКАМИ (Двойной шаг и Взятие на проходе) ---
+    if (moved_piece_type == 0) {
+        // 1. Детекция двойного шага пешки для установки нового enPassant
+        if (to_square - from_square == 16) {
+            // Белая пешка прыгнула вперед (например, e2 -> e4), поле enPassant — e3
+            board->enPassant = from_square + 8;
+        } else if (from_square - to_square == 16) {
+            // Черная пешка прыгнула вперед (например, f7 -> f5), поле enPassant — f6
+            board->enPassant = from_square - 8;
+        }
+
+        // 2. Обработка взятия на проходе (если пешка ходит на поле enPassant)
+        if (to_square == current_ep) {
+            // Вычисляем, где стояла съедаемая пешка (на одну горизонталь назад от целевого поля)
+            int victim_square = board->isWhiteTurn ? (to_square - 8) : (to_square + 8);
+            uint64_t victim_mask = ~(1UL << victim_square);
+            
+            // Стираем пешку соперника
+            board->pieces[them][0] &= victim_mask; 
+        }
+    }
+
+    // Обычное тихое взятие (если на целевом поле кто-то стоял, стираем его)
     for (int type = 0; type < 6; type++) {
         if (board->pieces[them][type] & to_mask) {
             board->pieces[them][type] &= ~to_mask;
@@ -179,9 +208,10 @@ void modifyStartpos(Board *board, char *argument) {
         }
     }
 
+    // Обработка превращения пешки (промоушен)
     if (len == 5 && moved_piece_type == 0) {
         char promo = argument[4];
-        int promo_type = 4;
+        int promo_type = 4; // По умолчанию ферзь
         
         if (promo == 'n' || promo == 'N') promo_type = 1;
         else if (promo == 'b' || promo == 'B') promo_type = 2;
@@ -192,6 +222,7 @@ void modifyStartpos(Board *board, char *argument) {
         board->pieces[us][moved_piece_type] |= to_mask;
     }
 
+    // Обработка рокировок (двигаем ладью вслед за королем)
     if (moved_piece_type == 5) {
         if (from_square == 4 && to_square == 6) {
             board->pieces[0][3] &= ~(1UL << 7); board->pieces[0][3] |= (1UL << 5);
@@ -204,6 +235,7 @@ void modifyStartpos(Board *board, char *argument) {
         }
     }
 
+    // Пересчитываем общие маски занятых полей
     board->allWhite = 0;
     board->allBlack = 0;
     for (int type = 0; type < 6; type++) {
@@ -212,5 +244,6 @@ void modifyStartpos(Board *board, char *argument) {
     }
     board->all = board->allWhite | board->allBlack;
 
+    // Меняем очередь хода
     board->isWhiteTurn = !board->isWhiteTurn;
 }

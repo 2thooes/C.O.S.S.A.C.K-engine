@@ -7,4 +7,7 @@
 #define MOVE_STR_LEN 6
 
 void coordsToMoveStr(int from, int to, char *str, bool is_promotion);
+void whitePawns(const Board *board, char moves[MAX_MOVES][MOVE_STR_LEN], int *moveCount);
+void blackPawns(const Board *board, char moves[MAX_MOVES][MOVE_STR_LEN], int *moveCount);
+void KnightMoves(const Board *board, char moves[MAX_MOVES][MOVE_STR_LEN], int *moveCount);
 void legalMovesSearch(const Board *board, char moves[MAX_MOVES][MOVE_STR_LEN], int *moveCount);
