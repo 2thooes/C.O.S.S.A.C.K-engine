@@ -84,6 +84,7 @@ void uci_loop(Board *board) {
         } 
         else if (strcmp(command, "go") == 0) {
             // Process evaluation request constraints. Stubbing a dummy value out for now.
+            int moves = 0;
             legalMovesSearch(board,legalMoves);
             printf("bestmove e2e4\n"); 
         } 
