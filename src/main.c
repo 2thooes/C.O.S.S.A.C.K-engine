@@ -9,7 +9,8 @@
 // Router loop processing input requests using standard UCI commands
 void uci_loop(Board *board) {
     char line[2000];
-    char *legalMoves[512];
+    //char *legalMoves[512];
+    char legalMoves[256][6];
     // Disable standard output buffering for instant communication with GUI
     setbuf(stdout, NULL); 
     setbuf(stdin, NULL);
@@ -85,8 +86,13 @@ void uci_loop(Board *board) {
         else if (strcmp(command, "go") == 0) {
             // Process evaluation request constraints. Stubbing a dummy value out for now.
             int moves = 0;
-            legalMovesSearch(board,legalMoves);
+            legalMovesSearch(board,legalMoves,&moves);
             printf("bestmove e2e4\n"); 
+            printf("info string Found %d legal moves\n", moves);
+            
+            for (int i = 0; i < moves; i++) {
+                printf("info string Move %d: %s\n", i + 1, legalMoves[i]);
+            } 
         } 
         else if (strcmp(command, "quit") == 0) {
             // Gracefully terminate active loop process instance
