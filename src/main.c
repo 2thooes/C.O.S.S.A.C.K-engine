@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include "board.h"
 #include "legalMoves.h"
+#include "evaluate.h"
 // Router loop processing input requests using standard UCI commands
 void uci_loop(Board *board) {
     char line[2000];
@@ -93,6 +94,7 @@ void uci_loop(Board *board) {
             for (int i = 0; i < moves; i++) {
                 printf("info string Move %d: %s\n", i + 1, legalMoves[i]);
             } 
+            printf("%d",evaluate(board));
         } 
         else if (strcmp(command, "quit") == 0) {
             // Gracefully terminate active loop process instance
