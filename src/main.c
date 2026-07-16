@@ -4,9 +4,11 @@
 #include <string.h>
 #include <ctype.h>
 #include <stdlib.h>
+#include <time.h>
 #include "board.h"
 #include "legalMoves.h"
 #include "evaluate.h"
+#include "findBest.h"
 // Router loop processing input requests using standard UCI commands
 void uci_loop(Board *board) {
     char line[2000];
@@ -87,14 +89,14 @@ void uci_loop(Board *board) {
         else if (strcmp(command, "go") == 0) {
             // Process evaluation request constraints. Stubbing a dummy value out for now.
             int moves = 0;
+            int defaultDepth = 2;
             legalMovesSearch(board,legalMoves,&moves);
-            printf("bestmove e2e4\n"); 
             printf("info string Found %d legal moves\n", moves);
-            
             for (int i = 0; i < moves; i++) {
                 printf("info string Move %d: %s\n", i + 1, legalMoves[i]);
-            } 
-            printf("%d",evaluate(board));
+            }
+            printf("info string eval: %d\n", evaluate(board));
+            printf("bestmove %s\n",legalMoves[findBest(board,legalMoves,moves)]);
         } 
         else if (strcmp(command, "quit") == 0) {
             // Gracefully terminate active loop process instance
@@ -106,6 +108,7 @@ void uci_loop(Board *board) {
 
 
 int main() {
+    srand((unsigned int)time(NULL));
     printf("C.O.S.S.A.C.K. Structure initialized successfully!\n");
     Board board;
 
