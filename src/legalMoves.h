@@ -7,6 +7,8 @@
 #define MOVE_STR_LEN 6
 
 void coordsToMoveStr(int from, int to, char *str, bool is_promotion);
+bool isKingSafe(const Board * board, int from, int to, bool is_promotion);
+
 void whitePawns(const Board *board, char moves[MAX_MOVES][MOVE_STR_LEN], int *moveCount);
 void blackPawns(const Board *board, char moves[MAX_MOVES][MOVE_STR_LEN], int *moveCount);
 void KnightMoves(const Board *board, char moves[MAX_MOVES][MOVE_STR_LEN], int *moveCount);
@@ -14,4 +16,5 @@ void bishopMoves(const Board *board, char moves[MAX_MOVES][MOVE_STR_LEN], int *m
 void rookMoves(const Board *board, char moves[MAX_MOVES][MOVE_STR_LEN], int *moveCount);
 void queenMoves(const Board *board, char moves[MAX_MOVES][MOVE_STR_LEN], int *moveCount);
 void kingMoves(const Board *board, char moves[MAX_MOVES][MOVE_STR_LEN], int *moveCount);
+
 void legalMovesSearch(const Board *board, char moves[MAX_MOVES][MOVE_STR_LEN], int *moveCount);

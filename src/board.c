@@ -3,6 +3,12 @@
 #include <string.h>
 #include <ctype.h>
 #include <stdlib.h>
+
+#define LOCAL_NOT_A_FILE 0xFEFEFEFEFEFEFEFEULL
+#define LOCAL_NOT_H_FILE 0x7F7F7F7F7F7F7F7FULL
+#define LOCAL_NOT_AB_FILE 0xFCFCFCFCFCFCFCFCULL
+#define LOCAL_NOT_GH_FILE 0x3F3F3F3F3F3F3F3FULL
+
 //Prints board for debug
 void printBoard(const Board *board) {
     printf("\n  +---+---+---+---+---+---+---+---\n");
@@ -136,7 +142,7 @@ void parseFen(Board *board, const char *fen) {
     board->all = board->allWhite | board->allBlack;
 }
 
-void modifyStartpos(Board *board, char *argument) {
+void modifyBoard(Board *board, char *argument) {
     size_t len = strlen(argument);
     if (len < 4 || len > 5) return;
 
@@ -246,4 +252,117 @@ void modifyStartpos(Board *board, char *argument) {
 
     // Меняем очередь хода
     board->isWhiteTurn = !board->isWhiteTurn;
+}
+
+uint64_t getAttackedSquares(const Board *board, int attacker_color) {
+    uint64_t attacked = 0ULL;
+    uint64_t occupied = board->all;
+
+    // --- 1. АТАКИ ПЕШЕК ---
+    uint64_t pawns = board->pieces[attacker_color][0]; // PAWN = 0
+    if (attacker_color == 0) { // WHITE = 0
+        attacked |= (pawns << 7) & LOCAL_NOT_H_FILE;
+        attacked |= (pawns << 9) & LOCAL_NOT_A_FILE;
+    } else { // BLACK = 1
+        attacked |= (pawns >> 7) & LOCAL_NOT_A_FILE;
+        attacked |= (pawns >> 9) & LOCAL_NOT_H_FILE;
+    }
+
+    // --- 2. АТАКИ КОНЕЙ ---
+    uint64_t knights = board->pieces[attacker_color][1]; // KNIGHT = 1
+    while (knights) {
+        int sq = __builtin_ctzll(knights);
+        uint64_t knight_single = 1ULL << sq;
+        uint64_t knight_attacks = 0ULL;
+
+        knight_attacks |= (knight_single << 17) & LOCAL_NOT_A_FILE;
+        knight_attacks |= (knight_single << 15) & LOCAL_NOT_H_FILE;
+        knight_attacks |= (knight_single << 10) & LOCAL_NOT_AB_FILE;
+        knight_attacks |= (knight_single << 6)  & LOCAL_NOT_GH_FILE;
+        knight_attacks |= (knight_single >> 17) & LOCAL_NOT_H_FILE;
+        knight_attacks |= (knight_single >> 15) & LOCAL_NOT_A_FILE;
+        knight_attacks |= (knight_single >> 10) & LOCAL_NOT_GH_FILE;
+        knight_attacks |= (knight_single >> 6)  & LOCAL_NOT_AB_FILE;
+
+        attacked |= knight_attacks;
+        knights &= knights - 1; // Сброс младшего бита
+    }
+
+    // --- 3. АТАКИ КОРОЛЯ ---
+    uint64_t king = board->pieces[attacker_color][5]; // KING = 5
+    if (king) {
+        int sq = __builtin_ctzll(king);
+        uint64_t king_single = 1ULL << sq;
+        uint64_t king_attacks = 0ULL;
+
+        king_attacks |= (king_single << 1) & LOCAL_NOT_A_FILE;
+        king_attacks |= (king_single >> 1) & LOCAL_NOT_H_FILE;
+        king_attacks |= (king_single << 8);
+        king_attacks |= (king_single >> 8);
+        king_attacks |= (king_single << 9) & LOCAL_NOT_A_FILE;
+        king_attacks |= (king_single << 7) & LOCAL_NOT_H_FILE;
+        king_attacks |= (king_single >> 7) & LOCAL_NOT_A_FILE;
+        king_attacks |= (king_single >> 9) & LOCAL_NOT_H_FILE;
+
+        attacked |= king_attacks;
+    }
+
+    // --- 4. АТАКИ СЛОНОВ (И ФЕРЗЕЙ по диагоналям) ---
+    uint64_t bishops = board->pieces[attacker_color][2] | board->pieces[attacker_color][4]; // BISHOP = 2, QUEEN = 4
+    int diagonal_shifts[4] = {7, 9, -7, -9};
+    uint64_t diagonal_masks[4] = {LOCAL_NOT_H_FILE, LOCAL_NOT_A_FILE, LOCAL_NOT_A_FILE, LOCAL_NOT_H_FILE};
+
+    while (bishops) {
+        int sq = __builtin_ctzll(bishops);
+        
+        for (int i = 0; i < 4; i++) {
+            uint64_t slide = 1ULL << sq;
+            int shift = diagonal_shifts[i];
+            uint64_t mask = diagonal_masks[i];
+
+            while (1) {
+                // Вычисляем сдвиг луча
+                uint64_t next = (shift > 0) ? (slide << shift) : (slide >> -shift);
+                next &= mask; // Применяем маску края, чтобы луч не перепрыгнул край доски
+                
+                if (!next) break; // Вышли за пределы доски
+
+                attacked |= next;
+                if (next & occupied) break; // Уперлись в препятствие (свою или чужую фигуру)
+                
+                slide = next;
+            }
+        }
+        bishops &= bishops - 1;
+    }
+
+    // --- 5. АТАКИ ЛАДЕЙ (И ФЕРЗЕЙ по горизонталям/вертикалям) ---
+    uint64_t rooks = board->pieces[attacker_color][3] | board->pieces[attacker_color][4]; // ROOK = 3, QUEEN = 4
+    int straight_shifts[4] = {1, 8, -1, -8};
+    uint64_t straight_masks[4] = {LOCAL_NOT_A_FILE, ~0ULL, LOCAL_NOT_H_FILE, ~0ULL};
+
+    while (rooks) {
+        int sq = __builtin_ctzll(rooks);
+
+        for (int i = 0; i < 4; i++) {
+            uint64_t slide = 1ULL << sq;
+            int shift = straight_shifts[i];
+            uint64_t mask = straight_masks[i];
+
+            while (1) {
+                uint64_t next = (shift > 0) ? (slide << shift) : (slide >> -shift);
+                next &= mask;
+
+                if (!next) break;
+
+                attacked |= next;
+                if (next & occupied) break;
+
+                slide = next;
+            }
+        }
+        rooks &= rooks - 1;
+    }
+
+    return attacked;
 }

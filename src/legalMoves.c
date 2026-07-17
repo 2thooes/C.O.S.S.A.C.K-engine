@@ -24,12 +24,23 @@ void coordsToMoveStr(int from, int to, char *str, bool is_promotion) {
     str[idx++] = '1' + to_rank;
     
     if (is_promotion) {
-        str[idx++] = 'q'; // By default promoting to a queen
+        str[idx++] = 'q'; // По умолчанию превращаемся в ферзя
     }
     str[idx] = '\0';
 }
 
+bool isKingSafe(const Board * board, int from, int to, bool is_promotion){
+    char str[6];
+    coordsToMoveStr(from, to, str, is_promotion);
+    Board newBoard = *board;
+    int us = board->isWhiteTurn ? 0 : 1;
+    int enemy = board->isWhiteTurn ? 1 : 0;
+    modifyBoard(&newBoard, str);
+    return (newBoard.pieces[us][5] & getAttackedSquares(&newBoard, enemy)) == 0;
+}
+
 void whitePawns(const Board *board, char moves[MAX_MOVES][MOVE_STR_LEN], int *moveCount){
+
     uint64_t empty_squares = ~board->all;
     uint64_t white_pawns = board->pieces[0][0];
 
@@ -66,18 +77,19 @@ void whitePawns(const Board *board, char moves[MAX_MOVES][MOVE_STR_LEN], int *mo
         int from_square = to_square - 8;
         
         bool is_promo = (to_square >= 56); // Если дошли до 8-й горизонтали — это промоушен
-        if(is_promo){
-            coordsToMoveStr(from_square, to_square, moves[*moveCount], is_promo);
-            (*moveCount)++;
-            coordsToMoveStr(from_square, to_square, moves[*moveCount], is_promo);
-            moves[*moveCount][4] = 'n';
-            (*moveCount)++;
+        if(isKingSafe(board,from_square,to_square,is_promo)){
+            if(is_promo){
+                coordsToMoveStr(from_square, to_square, moves[*moveCount], is_promo);
+                (*moveCount)++;
+                coordsToMoveStr(from_square, to_square, moves[*moveCount], is_promo);
+                moves[*moveCount][4] = 'n';
+                (*moveCount)++;
+            }
+            else{
+                coordsToMoveStr(from_square, to_square, moves[*moveCount], is_promo);
+                (*moveCount)++;
+            }
         }
-        else{
-            coordsToMoveStr(from_square, to_square, moves[*moveCount], is_promo);
-            (*moveCount)++;
-        }
-        
         
         temp &= temp - 1; 
     }
@@ -86,10 +98,10 @@ void whitePawns(const Board *board, char moves[MAX_MOVES][MOVE_STR_LEN], int *mo
     while (temp) {
         int to_square = __builtin_ctzll(temp);
         int from_square = to_square - 16;
-        
-        coordsToMoveStr(from_square, to_square, moves[*moveCount], false);
-        (*moveCount)++;
-        
+        if(isKingSafe(board,from_square,to_square,false)){
+            coordsToMoveStr(from_square, to_square, moves[*moveCount], false);
+            (*moveCount)++;
+        }
         temp &= temp - 1;
     }
 
@@ -99,6 +111,7 @@ void whitePawns(const Board *board, char moves[MAX_MOVES][MOVE_STR_LEN], int *mo
         int from_square = to_square - 9;
         
         bool is_promo = (to_square >= 56);
+        if(isKingSafe(board,from_square,to_square,is_promo)){
         if(is_promo){
             coordsToMoveStr(from_square, to_square, moves[*moveCount], is_promo);
             (*moveCount)++;
@@ -110,7 +123,7 @@ void whitePawns(const Board *board, char moves[MAX_MOVES][MOVE_STR_LEN], int *mo
             coordsToMoveStr(from_square, to_square, moves[*moveCount], is_promo);
             (*moveCount)++;
         }
-        
+        }
         temp &= temp - 1;
     }
 
@@ -120,6 +133,7 @@ void whitePawns(const Board *board, char moves[MAX_MOVES][MOVE_STR_LEN], int *mo
         int from_square = to_square - 7;
         
         bool is_promo = (to_square >= 56);
+        if(isKingSafe(board,from_square,to_square,is_promo)){
         if(is_promo){
             coordsToMoveStr(from_square, to_square, moves[*moveCount], is_promo);
             (*moveCount)++;
@@ -131,7 +145,7 @@ void whitePawns(const Board *board, char moves[MAX_MOVES][MOVE_STR_LEN], int *mo
             coordsToMoveStr(from_square, to_square, moves[*moveCount], is_promo);
             (*moveCount)++;
         }
-        
+        }
         temp &= temp - 1;
     }
 }
@@ -173,6 +187,7 @@ void blackPawns(const Board *board, char moves[MAX_MOVES][MOVE_STR_LEN], int *mo
         int from_square = to_square + 8;
         
         bool is_promo = (to_square <= 7);
+        if(isKingSafe(board,from_square,to_square,is_promo)){
         if(is_promo){
             coordsToMoveStr(from_square, to_square, moves[*moveCount], is_promo);
             (*moveCount)++;
@@ -184,7 +199,7 @@ void blackPawns(const Board *board, char moves[MAX_MOVES][MOVE_STR_LEN], int *mo
             coordsToMoveStr(from_square, to_square, moves[*moveCount], is_promo);
             (*moveCount)++;
         }
-        
+        }
         temp &= temp - 1; 
     }
 
@@ -192,10 +207,10 @@ void blackPawns(const Board *board, char moves[MAX_MOVES][MOVE_STR_LEN], int *mo
     while (temp) {
         int to_square = __builtin_ctzll(temp);
         int from_square = to_square + 16;
-        
+        if(isKingSafe(board,from_square,to_square,false)){
         coordsToMoveStr(from_square, to_square, moves[*moveCount], false);
         (*moveCount)++;
-        
+        }
         temp &= temp - 1;
     }
 
@@ -205,6 +220,7 @@ void blackPawns(const Board *board, char moves[MAX_MOVES][MOVE_STR_LEN], int *mo
         int from_square = to_square + 7;
         
         bool is_promo = (to_square <= 7);
+        if(isKingSafe(board,from_square,to_square,is_promo)){
         if(is_promo){
             coordsToMoveStr(from_square, to_square, moves[*moveCount], is_promo);
             (*moveCount)++;
@@ -216,7 +232,7 @@ void blackPawns(const Board *board, char moves[MAX_MOVES][MOVE_STR_LEN], int *mo
             coordsToMoveStr(from_square, to_square, moves[*moveCount], is_promo);
             (*moveCount)++;
         }
-        
+        }
         temp &= temp - 1;
     }
 
@@ -226,6 +242,7 @@ void blackPawns(const Board *board, char moves[MAX_MOVES][MOVE_STR_LEN], int *mo
         int from_square = to_square + 9;
         
         bool is_promo = (to_square <= 7);
+        if(isKingSafe(board,from_square,to_square,is_promo)){
         if(is_promo){
             coordsToMoveStr(from_square, to_square, moves[*moveCount], is_promo);
             (*moveCount)++;
@@ -237,7 +254,7 @@ void blackPawns(const Board *board, char moves[MAX_MOVES][MOVE_STR_LEN], int *mo
             coordsToMoveStr(from_square, to_square, moves[*moveCount], is_promo);
             (*moveCount)++;
         }
-        
+        }
         temp &= temp - 1;
     }
 }
@@ -271,11 +288,11 @@ void knightMoves(const Board *board, char moves[MAX_MOVES][MOVE_STR_LEN], int *m
         // Translating into UCI 
         while (legal_attacks) {
             int to_square = __builtin_ctzll(legal_attacks);
-            
+            if(isKingSafe(board,from_square,to_square,false)){
             // Horses cannot do a promotions
             coordsToMoveStr(from_square, to_square, moves[*moveCount], false);
             (*moveCount)++;
-
+            }
             legal_attacks &= legal_attacks - 1;
         }
 
@@ -327,10 +344,10 @@ void bishopMoves(const Board *board, char moves[MAX_MOVES][MOVE_STR_LEN], int *m
                 if (current_square & own_pieces) {
                     break;
                 }
-
+                if(isKingSafe(board,from_square,to_square,false)){
                 coordsToMoveStr(from_square, to_square, moves[*moveCount], false);
                 (*moveCount)++;
-
+                }
                 if (current_square & enemy_pieces) {
                     break;
                 }
@@ -385,10 +402,10 @@ void rookMoves(const Board *board, char moves[MAX_MOVES][MOVE_STR_LEN], int *mov
                 if (current_square & own_pieces) {
                     break;
                 }
-
+                if(isKingSafe(board,from_square,to_square,false)){
                 coordsToMoveStr(from_square, to_square, moves[*moveCount], false);
                 (*moveCount)++;
-
+                }
                 if (current_square & enemy_pieces) {
                     break;
                 }
@@ -401,19 +418,17 @@ void rookMoves(const Board *board, char moves[MAX_MOVES][MOVE_STR_LEN], int *mov
 
 void queenMoves(const Board *board, char moves[MAX_MOVES][MOVE_STR_LEN], int *moveCount) {
     int us = board->isWhiteTurn ? 0 : 1;
-    uint64_t queens = board->pieces[us][4]; // Индекс [4] — ферзи
+    uint64_t queens = board->pieces[us][4];
     if (!queens) return;
 
-    // Создаем локальную копию структуры board на стеке (это быстро и абсолютно безопасно!)
     Board temp_board = *board;
+    temp_board.pieces[us][4] = 0; // критично: убираем настоящего ферзя, чтобы не было призрака
 
-    // Настраиваем копию: притворяемся, что ферзи — это слоны
     temp_board.pieces[us][2] = queens;
     bishopMoves(&temp_board, moves, moveCount);
 
-    // Настраиваем копию: притворяемся, что ферзи — это ладьи
-    temp_board.pieces[us][2] = board->pieces[us][2]; // вернули слонов
-    temp_board.pieces[us][3] = queens;               // ферзи теперь ладьи
+    temp_board.pieces[us][2] = board->pieces[us][2];
+    temp_board.pieces[us][3] = queens;
     rookMoves(&temp_board, moves, moveCount);
 }
 
@@ -440,35 +455,45 @@ void kingMoves(const Board *board, char moves[MAX_MOVES][MOVE_STR_LEN], int *mov
 
     while (legal_attacks) {
         int to_square = __builtin_ctzll(legal_attacks);
+        if(isKingSafe(board,from_square,to_square,false)){
         coordsToMoveStr(from_square, to_square, moves[*moveCount], false);
         (*moveCount)++;
+        }
         legal_attacks &= legal_attacks - 1;
     }
 
     // 2. Castling
     uint64_t all_pieces = board->all;
-
+    
     if (board->isWhiteTurn) {
         // King side castling for white(e1g1)
         if ((board->castleRights & 1) && !(all_pieces & (1UL << 5)) && !(all_pieces & (1UL << 6))) {
-            coordsToMoveStr(4, 6, moves[*moveCount], false); // e1 -> g1
-            (*moveCount)++;
+            if(isKingSafe(board,4,6,false)){
+                coordsToMoveStr(4, 6, moves[*moveCount], false); // e1 -> g1
+                (*moveCount)++;
+            }
         }
         // Queen side castling for white(e1c1)
         if ((board->castleRights & 2) && !(all_pieces & (1UL << 1)) && !(all_pieces & (1UL << 2)) && !(all_pieces & (1UL << 3))) {
-            coordsToMoveStr(4, 2, moves[*moveCount], false); // e1 -> c1
-            (*moveCount)++;
+            if(isKingSafe(board,4,2,false)){
+                coordsToMoveStr(4, 2, moves[*moveCount], false); // e1 -> c1
+                (*moveCount)++;
+            }
         }
     } else {
         // King side castling for black (e8g8)
         if ((board->castleRights & 4) && !(all_pieces & (1UL << 61)) && !(all_pieces & (1UL << 62))) {
-            coordsToMoveStr(60, 62, moves[*moveCount], false); // e8 -> g8
-            (*moveCount)++;
+            if(isKingSafe(board,60,62,false)){
+                coordsToMoveStr(60, 62, moves[*moveCount], false); // e8 -> g8
+                (*moveCount)++;
+            }
         }
         // Queen side castling for black (e8c8)
         if ((board->castleRights & 8) && !(all_pieces & (1UL << 57)) && !(all_pieces & (1UL << 58)) && !(all_pieces & (1UL << 59))) {
-            coordsToMoveStr(60, 58, moves[*moveCount], false); // e8 -> c8
-            (*moveCount)++;
+            if(isKingSafe(board,60,58,false)){
+                coordsToMoveStr(60, 58, moves[*moveCount], false); // e8 -> c8
+                (*moveCount)++;
+            }
         }
     }
 }

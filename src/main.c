@@ -79,7 +79,7 @@ void uci_loop(Board *board) {
                 printf("info string there are some moves here!\n");
                 
                 while ((argument = strtok(NULL, " ")) != NULL) {
-                    modifyStartpos(board, argument);
+                    modifyBoard(board, argument);
                 }
             }
             

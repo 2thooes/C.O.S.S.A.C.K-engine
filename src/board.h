@@ -24,6 +24,6 @@ typedef struct {
 void printBoard(const Board *board);
 void setStartpos(Board *board);
 void parseFen(Board *board, const char *fen); // Unified snake_case
-void modifyStartpos(Board *board, char *argument);
-
+void modifyBoard(Board *board, char *argument);
+uint64_t getAttackedSquares(const Board *board, int attacker_color);
 #endif // BOARD_H
