@@ -188,21 +188,15 @@ void modifyBoard(Board *board, char *argument) {
     if (moved_piece_type == 0) {
         // 1. Детекция двойного шага пешки для установки нового enPassant
         if (to_square - from_square == 16) {
-            // Белая пешка прыгнула вперед (например, e2 -> e4), поле enPassant — e3
             board->enPassant = from_square + 8;
         } else if (from_square - to_square == 16) {
-            // Черная пешка прыгнула вперед (например, f7 -> f5), поле enPassant — f6
             board->enPassant = from_square - 8;
         }
 
-        // 2. Обработка взятия на проходе (если пешка ходит на поле enPassant)
+        // 2. Обработка взятия на проходе
         if (to_square == current_ep) {
-            // Вычисляем, где стояла съедаемая пешка (на одну горизонталь назад от целевого поля)
             int victim_square = board->isWhiteTurn ? (to_square - 8) : (to_square + 8);
-            uint64_t victim_mask = ~(1UL << victim_square);
-            
-            // Стираем пешку соперника
-            board->pieces[them][0] &= victim_mask; 
+            board->pieces[them][0] &= ~(1UL << victim_square); 
         }
     }
 
@@ -239,6 +233,32 @@ void modifyBoard(Board *board, char *argument) {
         } else if (from_square == 60 && to_square == 58) {
             board->pieces[1][3] &= ~(1UL << 56); board->pieces[1][3] |= (1UL << 59);
         }
+    }
+
+    // --- ОБНОВЛЕНИЕ ПРАВ РОКИРОВКИ ЧЕРЕЗ IF ---
+    // Если походил белый король
+    if (from_square == 4) {
+        board->castleRights &= ~1; // Сброс White King-side
+        board->castleRights &= ~2; // Сброс White Queen-side
+    }
+    // Если походил черный король
+    else if (from_square == 60) {
+        board->castleRights &= ~4; // Сброс Black King-side
+        board->castleRights &= ~8; // Сброс Black Queen-side
+    }
+
+    // Если ладья походила или была взята на угловых полях
+    if (from_square == 0 || to_square == 0) {   // a1
+        board->castleRights &= ~2; // Сброс White Queen-side
+    }
+    if (from_square == 7 || to_square == 7) {   // h1
+        board->castleRights &= ~1; // Сброс White King-side
+    }
+    if (from_square == 56 || to_square == 56) { // a8
+        board->castleRights &= ~8; // Сброс Black Queen-side
+    }
+    if (from_square == 63 || to_square == 63) { // h8
+        board->castleRights &= ~4; // Сброс Black King-side
     }
 
     // Пересчитываем общие маски занятых полей
