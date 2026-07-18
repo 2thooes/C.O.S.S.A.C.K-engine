@@ -27,13 +27,13 @@ int evaluate(Board *board){
 
     int rawEval = 0;
 
-    // Материал
+    // CalculatingMaterial
     for (int i = 0; i < sizeof(evaluations) / sizeof(evaluations[0]); i++){
         rawEval += (__builtin_popcountll(board->pieces[0][i]) 
                   - __builtin_popcountll(board->pieces[1][i])) * evaluations[i];
     }
 
-    // PST пешек
+    // PST of pawns
     uint64_t whitePawns = board->pieces[0][0];
     while (whitePawns) {
         int sq = __builtin_ctzll(whitePawns);
@@ -44,7 +44,7 @@ int evaluate(Board *board){
     uint64_t blackPawns = board->pieces[1][0];
     while (blackPawns) {
         int sq = __builtin_ctzll(blackPawns);
-        rawEval -= pawnEval[sq ^ 56]; // зеркалим для чёрных
+        rawEval -= pawnEval[sq ^ 56]; // 180 degree for black
         blackPawns &= blackPawns - 1;
     }
 

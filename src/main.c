@@ -12,7 +12,6 @@
 // Router loop processing input requests using standard UCI commands
 void uci_loop(Board *board) {
     char line[2000];
-    //char *legalMoves[512];
     char legalMoves[256][6];
     // Disable standard output buffering for instant communication with GUI
     setbuf(stdout, NULL); 
@@ -87,20 +86,94 @@ void uci_loop(Board *board) {
             printBoard(board);
         } 
         else if (strcmp(command, "go") == 0) {
-            // Process evaluation request constraints. Stubbing a dummy value out for now.
             int moves = 0;
-            int defaultDepth = 2;
-            legalMovesSearch(board,legalMoves,&moves);
+            int threads = 1;
+            // Default values
+            int wtime = -1, btime = -1, winc = 0, binc = 0;
+            int movestogo = -1, movetime = -1, fixedDepth = -1;
+            bool infinite = false;
+
+            char *arg = strtok(NULL, " ");
+            while (arg != NULL) {
+                if (strcmp(arg, "wtime") == 0) {
+                    arg = strtok(NULL, " ");
+                    if (arg) wtime = atoi(arg);
+                }
+                else if (strcmp(arg, "btime") == 0) {
+                    arg = strtok(NULL, " ");
+                    if (arg) btime = atoi(arg);
+                }
+                else if (strcmp(arg, "winc") == 0) {
+                    arg = strtok(NULL, " ");
+                    if (arg) winc = atoi(arg);
+                }
+                else if (strcmp(arg, "binc") == 0) {
+                    arg = strtok(NULL, " ");
+                    if (arg) binc = atoi(arg);
+                }
+                else if (strcmp(arg, "movestogo") == 0) {
+                    arg = strtok(NULL, " ");
+                    if (arg) movestogo = atoi(arg);
+                }
+                else if (strcmp(arg, "movetime") == 0) {
+                    arg = strtok(NULL, " ");
+                    if (arg) movetime = atoi(arg);
+                }
+                else if (strcmp(arg, "depth") == 0) {
+                    arg = strtok(NULL, " ");
+                    if (arg) fixedDepth = atoi(arg);
+                }
+                else if (strcmp(arg, "infinite") == 0) {
+                    infinite = true;
+                }
+                arg = strtok(NULL, " ");
+            }
+
+            // Calculating the time budget
+            int timeBudgetMs;
+            int depthToUse;
+
+            if (fixedDepth > 0) {
+                depthToUse = fixedDepth;
+                timeBudgetMs = -1; // Without time limit
+            }
+            else if (movetime > 0) {
+                timeBudgetMs = movetime;
+                depthToUse = 99; // Depth is restricted by time
+            }
+            else if (infinite) {
+                timeBudgetMs = -1;
+                depthToUse = 99;
+            }
+            else {
+                // Usually GUI is restricting time
+                int myTime  = board->isWhiteTurn ? wtime : btime;
+                int myInc   = board->isWhiteTurn ? winc  : binc;
+
+                if (myTime < 0) myTime = 5000;
+
+                int movesLeft = (movestogo > 0) ? movestogo : 30; // If not set, let it be 30 lol
+
+                // Simple rule: time/turn
+                timeBudgetMs = (myTime / movesLeft) + (myInc / 2);
+
+                if (timeBudgetMs > myTime / 2) {
+                    timeBudgetMs = myTime / 2;
+                }
+
+                depthToUse = 99; 
+            }
+
+            legalMovesSearch(board, legalMoves, &moves);
             printf("info string Found %d legal moves\n", moves);
             for (int i = 0; i < moves; i++) {
                 printf("info string Move %d: %s\n", i + 1, legalMoves[i]);
             }
             printf("info string eval: %d\n", evaluate(board));
-            printf("bestmove %s\n",legalMoves[findBest(board,legalMoves,moves)]);
-        } 
-        else if (strcmp(command, "quit") == 0) {
-            // Gracefully terminate active loop process instance
-            break;
+            printf("info string time budget: %d ms, depth: %d\n", timeBudgetMs, depthToUse);
+
+            int bestIdx = findBest(board, legalMoves, moves, threads, depthToUse, timeBudgetMs);
+            printf("bestmove %s\n", legalMoves[bestIdx]);
         }
     }
 }

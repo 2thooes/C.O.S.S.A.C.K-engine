@@ -499,10 +499,10 @@ void kingMoves(const Board *board, char moves[MAX_MOVES][MOVE_STR_LEN], int *mov
 }
 
 void legalMovesSearch(const Board *board, char moves[MAX_MOVES][MOVE_STR_LEN], int *moveCount) {
-    printf("info string DEBUG: board->enPassant = %d\n", board->enPassant);
+    //printf("info string DEBUG: board->enPassant = %d\n", board->enPassant);
     *moveCount = 0;
     if (board->isWhiteTurn) {
-        printf("Generating legal moves for white...\n");
+        //printf("Generating legal moves for white...\n");
         whitePawns(board,moves,moveCount);
         knightMoves(board, moves, moveCount);
         bishopMoves(board,moves,moveCount);
@@ -511,7 +511,7 @@ void legalMovesSearch(const Board *board, char moves[MAX_MOVES][MOVE_STR_LEN], i
         kingMoves(board,moves,moveCount);
     } 
     else {
-        printf("generating legal moves for black ");
+        //printf("generating legal moves for black ");
         blackPawns(board,moves,moveCount);
         knightMoves(board, moves, moveCount);
         bishopMoves(board,moves,moveCount);
