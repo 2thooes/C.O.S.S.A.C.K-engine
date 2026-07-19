@@ -15,14 +15,14 @@ int evaluate(Board *board){
     };
 
     int pawnEval[64] = {
-         0,  0,  0,  0,  0,  0,  0,  0,
-         5, 10, 10,-20,-20, 10, 10,  5,
-         5, -5,-10,  0,  0,-10, -5,  5,
-         0,  0,  0, 20, 20,  0,  0,  0,
-         5,  5, 10, 25, 25, 10,  5,  5,
-        10, 10, 20, 30, 30, 20, 10, 10,
+        0,  0,  0,  0,  0,  0,  0,  0,
         50, 50, 50, 50, 50, 50, 50, 50,
-         0,  0,  0,  0,  0,  0,  0,  0
+        10, 10, 20, 30, 30, 20, 10, 10,
+        5,  5, 10, 25, 25, 10,  5,  5,
+        0,  0,  0, 20, 20,  0,  0,  0,
+        0, -5,-10,  0,  0,-10, -5,  0,
+        0,-10,-10,-20,-20,-10,-10,  0,
+        0,  0,  0,  0,  0,  0,  0,  0
     };
 
     int rawEval = 0;
@@ -37,14 +37,14 @@ int evaluate(Board *board){
     uint64_t whitePawns = board->pieces[0][0];
     while (whitePawns) {
         int sq = __builtin_ctzll(whitePawns);
-        rawEval += pawnEval[sq];
+        rawEval += pawnEval[sq ^ 56];
         whitePawns &= whitePawns - 1;
     }
 
     uint64_t blackPawns = board->pieces[1][0];
     while (blackPawns) {
         int sq = __builtin_ctzll(blackPawns);
-        rawEval -= pawnEval[sq ^ 56]; // 180 degree for black
+        rawEval -= pawnEval[sq]; // 180 degree for black
         blackPawns &= blackPawns - 1;
     }
 

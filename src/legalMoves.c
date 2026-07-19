@@ -468,14 +468,18 @@ void kingMoves(const Board *board, char moves[MAX_MOVES][MOVE_STR_LEN], int *mov
     if (board->isWhiteTurn) {
         // King side castling for white(e1g1)
         if ((board->castleRights & 1) && !(all_pieces & (1UL << 5)) && !(all_pieces & (1UL << 6))) {
-            if(isKingSafe(board,4,6,false)){
+            if(isKingSafe(board, 4, 4, false) &&   // e1 not in check right now
+               isKingSafe(board, 4, 5, false) &&   // f1 not attacked
+               isKingSafe(board, 4, 6, false)){
                 coordsToMoveStr(4, 6, moves[*moveCount], false); // e1 -> g1
                 (*moveCount)++;
             }
         }
         // Queen side castling for white(e1c1)
         if ((board->castleRights & 2) && !(all_pieces & (1UL << 1)) && !(all_pieces & (1UL << 2)) && !(all_pieces & (1UL << 3))) {
-            if(isKingSafe(board,4,2,false)){
+            if(isKingSafe(board, 4, 4, false) &&   // e1 not in check right now
+               isKingSafe(board, 4, 3, false) &&   // f1 not attacked
+               isKingSafe(board, 4, 2, false)){
                 coordsToMoveStr(4, 2, moves[*moveCount], false); // e1 -> c1
                 (*moveCount)++;
             }
@@ -483,18 +487,22 @@ void kingMoves(const Board *board, char moves[MAX_MOVES][MOVE_STR_LEN], int *mov
     } else {
         // King side castling for black (e8g8)
         if ((board->castleRights & 4) && !(all_pieces & (1UL << 61)) && !(all_pieces & (1UL << 62))) {
-            if(isKingSafe(board,60,62,false)){
-                coordsToMoveStr(60, 62, moves[*moveCount], false); // e8 -> g8
-                (*moveCount)++;
-            }
-        }
+    if (isKingSafe(board, 60, 60, false) &&   // e8 not in check
+        isKingSafe(board, 60, 61, false) &&   // f8 not attacked
+        isKingSafe(board, 60, 62, false)) {   // g8 not attacked
+        coordsToMoveStr(60, 62, moves[*moveCount], false); // e8 -> g8
+        (*moveCount)++;
+    }
+}
         // Queen side castling for black (e8c8)
         if ((board->castleRights & 8) && !(all_pieces & (1UL << 57)) && !(all_pieces & (1UL << 58)) && !(all_pieces & (1UL << 59))) {
-            if(isKingSafe(board,60,58,false)){
-                coordsToMoveStr(60, 58, moves[*moveCount], false); // e8 -> c8
-                (*moveCount)++;
-            }
-        }
+    if (isKingSafe(board, 60, 60, false) &&   // e8
+        isKingSafe(board, 60, 59, false) &&   // d8
+        isKingSafe(board, 60, 58, false)) {   // c8
+        coordsToMoveStr(60, 58, moves[*moveCount], false); // e8 -> c8
+        (*moveCount)++;
+    }
+}
     }
 }
 
