@@ -2,6 +2,8 @@
 
 A lightweight, high-performance chess engine written in C using bitboards for efficient board representation and move generation. The engine is fully compatible with the **UCI (Universal Chess Interface)** protocol, allowing it to easily connect to popular graphical user interfaces (GUIs) like Cutechess, Arena, or tournament managers.
 
+After testing with stockfish, the estimated power level is: 1450 elo.
+
 ## Architectural Features
 
 *   **Bitboards:** Complete 64-bit (`uint64_t`) representation of the chess board for lightning-fast move generation and slider piece evaluation.
