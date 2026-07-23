@@ -10,6 +10,8 @@
 #include "evaluate.h"
 #include "findBest.h"
 // Router loop processing input requests using standard UCI commands
+
+
 void uci_loop(Board *board) {
     char line[2000];
     char legalMoves[256][6];

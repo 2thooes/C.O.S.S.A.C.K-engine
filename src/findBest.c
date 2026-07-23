@@ -84,18 +84,18 @@ int findBest(Board *board, char moves[MAX_MOVES][MOVE_STR_LEN], int moveCount, i
 
     for (int depth = 1; depth <= maxDepth; depth++) {
         long elapsedBeforeDepth = getTimeMs() - startTime;
-    if (timeBudgetMs > 0 && elapsedBeforeDepth >= timeBudgetMs) {
-        break;
-    }
-
-    // Простая эвристика: если прошлая глубина заняла X мс, следующая обычно займёт ~X*5-8 (branching factor)
-    // Если даже пессимистичная оценка "не влезет" — не начинаем новую глубину
-    if (timeBudgetMs > 0 && depth > 1) {
-        long estimatedNext = elapsedBeforeDepth * 6; // грубая оценка роста
-        if (estimatedNext > timeBudgetMs * 3) { // с запасом, чтобы не обрубать слишком рано
+        if (timeBudgetMs > 0 && elapsedBeforeDepth >= timeBudgetMs) {
             break;
         }
-    }
+
+        // Простая эвристика: если прошлая глубина заняла X мс, следующая обычно займёт ~X*5-8 (branching factor)
+        // Если даже пессимистичная оценка "не влезет" — не начинаем новую глубину
+        if (timeBudgetMs > 0 && depth > 1) {
+            long estimatedNext = elapsedBeforeDepth * 6; // грубая оценка роста
+            if (estimatedNext > timeBudgetMs * 3) { // с запасом, чтобы не обрубать слишком рано
+                break;
+            }
+        }
 
         nodeCount = 0;
         int currentBestIndex = 0;
@@ -106,14 +106,15 @@ int findBest(Board *board, char moves[MAX_MOVES][MOVE_STR_LEN], int moveCount, i
             modifyBoard(&copy, moves[i]);
 
             int score = -negamax(&copy, depth - 1, INT_MIN + 1, INT_MAX - 1, 1);
+            printf("%s:%d\n",moves[i],score);
 
             if (score > bestScore) {
-    bestScore = score;
-    currentBestIndex = i;
-    strcpy(pvTable[0][0], moves[i]);
-    memcpy(pvTable[0][1], pvTable[1][0], pvLength[1] * 6);
-    pvLength[0] = pvLength[1] + 1;
-}
+                bestScore = score;
+                currentBestIndex = i;
+                strcpy(pvTable[0][0], moves[i]);
+                memcpy(pvTable[0][1], pvTable[1][0], pvLength[1] * 6);
+                pvLength[0] = pvLength[1] + 1;
+            }
 
             // Checking times
             if (timeBudgetMs > 0) {
@@ -126,7 +127,7 @@ int findBest(Board *board, char moves[MAX_MOVES][MOVE_STR_LEN], int moveCount, i
 
         bestIndex = currentBestIndex; // Since this depth is done we are saving the result
 
-        // --- ВОТ ЗДЕСЬ ПЕЧАТАЕМ INFO ---
+        // --- INFO ---
         long elapsed = getTimeMs() - startTime;
         long nps = elapsed > 0 ? (nodeCount * 1000L / elapsed) : nodeCount;
 
