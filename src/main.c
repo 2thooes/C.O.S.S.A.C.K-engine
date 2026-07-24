@@ -9,6 +9,7 @@
 #include "legalMoves.h"
 #include "evaluate.h"
 #include "findBest.h"
+#include "timeManagement.h"
 // Router loop processing input requests using standard UCI commands
 
 
@@ -135,36 +136,7 @@ void uci_loop(Board *board) {
             int timeBudgetMs;
             int depthToUse;
 
-            if (fixedDepth > 0) {
-                depthToUse = fixedDepth;
-                timeBudgetMs = -1; // Without time limit
-            }
-            else if (movetime > 0) {
-                timeBudgetMs = movetime;
-                depthToUse = 99; // Depth is restricted by time
-            }
-            else if (infinite) {
-                timeBudgetMs = -1;
-                depthToUse = 99;
-            }
-            else {
-                // Usually GUI is restricting time
-                int myTime  = board->isWhiteTurn ? wtime : btime;
-                int myInc   = board->isWhiteTurn ? winc  : binc;
-
-                if (myTime < 0) myTime = 5000;
-
-                int movesLeft = (movestogo > 0) ? movestogo : 30; // If not set, let it be 30 lol
-
-                // Simple rule: time/turn
-                timeBudgetMs = (myTime / movesLeft) + (myInc / 2);
-
-                if (timeBudgetMs > myTime / 2) {
-                    timeBudgetMs = myTime / 2;
-                }
-
-                depthToUse = 99; 
-            }
+            calculateTimeBudget(board,wtime,btime,winc,binc,movestogo,movetime,fixedDepth,infinite,&timeBudgetMs,&depthToUse);
 
             legalMovesSearch(board, legalMoves, &moves);
             printf("info string Found %d legal moves\n", moves);
