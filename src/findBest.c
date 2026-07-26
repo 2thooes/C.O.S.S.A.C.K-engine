@@ -136,7 +136,7 @@ int findBest(Board *board, char moves[MAX_MOVES][MOVE_STR_LEN], int moveCount, i
         for (int j = 0; j < pvLength[0]; j++) {
             printf(" %s", pvTable[0][j]);
         }
-        printf("\n");
+        printf("\n%d\n",nodeCount);
         fflush(stdout);
 
         long elapsedAfter = getTimeMs() - startTime;
