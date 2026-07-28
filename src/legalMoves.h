@@ -28,4 +28,5 @@ void rookMoves(const Board *board, MovesStr* moves);
 void queenMoves(const Board *board, MovesStr* moves);
 void kingMoves(const Board *board, MovesStr* moves);
 
+void attacksSearch(const Board *board, char moves[MAX_MOVES][MOVE_STR_LEN], int *moveCount);
 void legalMovesSearch(const Board *board, char moves[MAX_MOVES][MOVE_STR_LEN], int *moveCount);

@@ -28,13 +28,67 @@ bool isInCheck(const Board *board, int us) {
     return (king & getAttackedSquares(board, enemy)) != 0;
 }
 
+int quiescence(Board *board, int alpha, int beta)
+{
+    nodeCount++;
+
+    int side = board->isWhiteTurn ? 1 : -1;
+
+    int standPat = evaluate(board) * side;
+
+
+    // Если текущая позиция уже лучше beta
+    if (standPat >= beta)
+        return beta;
+
+
+    // Поднимаем alpha
+    if (standPat > alpha)
+        alpha = standPat;
+
+
+
+    char moves[MAX_MOVES][MOVE_STR_LEN];
+    int moveCount = 0;
+
+
+    // Только взятия
+    attacksSearch(board, moves, &moveCount);
+
+
+
+    for (int i = 0; i < moveCount; i++)
+    {
+        Board copy = *board;
+
+        modifyBoard(&copy, moves[i]);
+
+
+        int score = -quiescence(
+            &copy,
+            -beta,
+            -alpha
+        );
+
+
+        if(score >= beta)
+            return beta;
+
+
+        if(score > alpha)
+            alpha = score;
+    }
+
+
+    return alpha;
+}
+
 int negamax(Board *board, int depth, int alpha, int beta, int ply) {
     nodeCount++;
     if (depth == 0) {
-        pvLength[ply] = 0;  // на листе PV пустой
-        int side = board->isWhiteTurn ? 1 : -1;
-        return evaluate(board) * side;
-    }
+    pvLength[ply] = 0;
+    return quiescence(board, alpha, beta);
+}
 
     char moves[MAX_MOVES][MOVE_STR_LEN];
     int moveCount = 0;
@@ -143,6 +197,7 @@ int findBest(Board *board, char moves[MAX_MOVES][MOVE_STR_LEN], int moveCount, i
         if (timeBudgetMs > 0 && elapsedAfter >= timeBudgetMs) break;
 
     }
-
+    long totalTime = getTimeMs() - startTime;
+    printf("Model war thinking for %d milliseconds\n",totalTime);
     return bestIndex;
 }

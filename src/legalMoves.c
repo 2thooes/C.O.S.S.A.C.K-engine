@@ -533,6 +533,46 @@ void kingMoves(const Board *board, MovesStr* moves) {
     }
 }
 
+void attacksSearch(const Board *board, char moves[MAX_MOVES][MOVE_STR_LEN], int *moveCount) {
+    MovesStr movesStr;
+    movesStr.bestCount = 0;
+    movesStr.highCount = 0;
+    movesStr.mediumCount = 0;
+    movesStr.lowCount = 0;
+
+    *moveCount = 0;
+
+    if (board->isWhiteTurn) {
+        whitePawns(board, &movesStr);
+        knightMoves(board, &movesStr);
+        bishopMoves(board, &movesStr);
+        rookMoves(board, &movesStr);
+        queenMoves(board, &movesStr);
+        kingMoves(board, &movesStr);
+
+    } else {
+        blackPawns(board, &movesStr);
+        knightMoves(board, &movesStr);
+        bishopMoves(board, &movesStr);
+        rookMoves(board, &movesStr);
+        queenMoves(board, &movesStr);
+        kingMoves(board, &movesStr);
+    }
+
+    int idx = 0;
+
+    for (int i = 0; i < movesStr.bestCount; i++) {
+        strcpy(moves[idx], movesStr.bestMoves[i]);
+        idx++;
+    }
+    for (int i = 0; i < movesStr.highCount; i++) {
+        strcpy(moves[idx], movesStr.highMoves[i]);
+        idx++;
+    }
+
+    *moveCount = idx;
+}
+
 void legalMovesSearch(const Board *board, char moves[MAX_MOVES][MOVE_STR_LEN], int *moveCount) {
     MovesStr movesStr;
     movesStr.bestCount = 0;
@@ -549,6 +589,7 @@ void legalMovesSearch(const Board *board, char moves[MAX_MOVES][MOVE_STR_LEN], i
         rookMoves(board, &movesStr);
         queenMoves(board, &movesStr);
         kingMoves(board, &movesStr);
+
     } else {
         blackPawns(board, &movesStr);
         knightMoves(board, &movesStr);
