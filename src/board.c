@@ -19,7 +19,7 @@ void printBoard(const Board *board) {
             char piece_char = '.';
             
             for (int type = 0; type < 6; type++) {
-                uint64_t mask = 1UL << square;
+                uint64_t mask = 1ULL << square;
                 if (board->pieces[0][type] & mask) {
                     char white_pieces[] = {'P', 'N', 'B', 'R', 'Q', 'K'};
                     piece_char = white_pieces[type];
@@ -159,8 +159,8 @@ void modifyBoard(Board *board, char *argument) {
     int from_square = from_rank * 8 + from_file;
     int to_square   = to_rank * 8 + to_file;
 
-    uint64_t from_mask = 1UL << from_square;
-    uint64_t to_mask   = 1UL << to_square;
+    uint64_t from_mask = 1ULL << from_square;
+    uint64_t to_mask   = 1ULL << to_square;
 
     int us = board->isWhiteTurn ? 0 : 1;
     int them = 1 - us;
@@ -196,7 +196,7 @@ void modifyBoard(Board *board, char *argument) {
         // 2. Обработка взятия на проходе
         if (to_square == current_ep) {
             int victim_square = board->isWhiteTurn ? (to_square - 8) : (to_square + 8);
-            board->pieces[them][0] &= ~(1UL << victim_square); 
+            board->pieces[them][0] &= ~(1ULL << victim_square); 
         }
     }
 
@@ -225,13 +225,13 @@ void modifyBoard(Board *board, char *argument) {
     // Обработка рокировок (двигаем ладью вслед за королем)
     if (moved_piece_type == 5) {
         if (from_square == 4 && to_square == 6) {
-            board->pieces[0][3] &= ~(1UL << 7); board->pieces[0][3] |= (1UL << 5);
+            board->pieces[0][3] &= ~(1ULL << 7); board->pieces[0][3] |= (1ULL << 5);
         } else if (from_square == 4 && to_square == 2) {
-            board->pieces[0][3] &= ~(1UL << 0); board->pieces[0][3] |= (1UL << 3);
+            board->pieces[0][3] &= ~(1ULL << 0); board->pieces[0][3] |= (1ULL << 3);
         } else if (from_square == 60 && to_square == 62) {
-            board->pieces[1][3] &= ~(1UL << 63); board->pieces[1][3] |= (1UL << 61);
+            board->pieces[1][3] &= ~(1ULL << 63); board->pieces[1][3] |= (1ULL << 61);
         } else if (from_square == 60 && to_square == 58) {
-            board->pieces[1][3] &= ~(1UL << 56); board->pieces[1][3] |= (1UL << 59);
+            board->pieces[1][3] &= ~(1ULL << 56); board->pieces[1][3] |= (1ULL << 59);
         }
     }
 
