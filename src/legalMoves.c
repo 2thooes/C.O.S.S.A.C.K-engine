@@ -63,7 +63,7 @@ void whitePawns(const Board *board, MovesStr* moves){
 
     // --- 5. EN PASSANT ---
     if (board->enPassant != -1) {
-        uint64_t ep_mask = 1UL << board->enPassant;
+        uint64_t ep_mask = 1ULL << board->enPassant;
 
         uint64_t ep_attacks_right = ((white_pawns & NOT_H_FILE) << 9) & ep_mask;
         uint64_t ep_attacks_left  = ((white_pawns & NOT_A_FILE) << 7) & ep_mask;
@@ -503,7 +503,7 @@ void kingMoves(const Board *board, MovesStr* moves) {
             }
         }
         // Queen side castling for white (e1c1)
-        if ((board->castleRights & 2) && !(all_pieces & (1ULL << 1)) && !(all_pieces & (1ULL << 2)) && !(all_pieces & (1UL << 3))) {
+        if ((board->castleRights & 2) && !(all_pieces & (1ULL << 1)) && !(all_pieces & (1ULL << 2)) && !(all_pieces & (1ULL << 3))) {
             if (isKingSafe(board, 4, 4, false) &&
                 isKingSafe(board, 4, 3, false) &&
                 isKingSafe(board, 4, 2, false)) {
@@ -522,7 +522,7 @@ void kingMoves(const Board *board, MovesStr* moves) {
             }
         }
         // Queen side castling for black (e8c8)
-        if ((board->castleRights & 8) && !(all_pieces & (1ULL << 57)) && !(all_pieces & (1ULL << 58)) && !(all_pieces & (1UL << 59))) {
+        if ((board->castleRights & 8) && !(all_pieces & (1ULL << 57)) && !(all_pieces & (1ULL << 58)) && !(all_pieces & (1ULL << 59))) {
             if (isKingSafe(board, 60, 60, false) &&
                 isKingSafe(board, 60, 59, false) &&
                 isKingSafe(board, 60, 58, false)) {
