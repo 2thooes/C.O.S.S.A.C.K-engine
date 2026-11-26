@@ -128,6 +128,7 @@ int negamax(Board *board, int depth, int alpha, int beta, int ply) {
 
     return best;
 }
+
 int findBest(Board *board, char moves[MAX_MOVES][MOVE_STR_LEN], int moveCount, int threads, int maxDepth, int timeBudgetMs) {
     if (moveCount <= 0) {
         return -1;

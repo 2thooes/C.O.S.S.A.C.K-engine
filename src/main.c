@@ -149,6 +149,9 @@ void uci_loop(Board *board) {
             int bestIdx = findBest(board, legalMoves, moves, threads, depthToUse, timeBudgetMs);
             printf("bestmove %s\n", legalMoves[bestIdx]);
         }
+        else if (strcmp(command, "quit") == 0) {
+            break;
+        }
     }
 }
 
