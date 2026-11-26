@@ -23,7 +23,7 @@ void uci_loop(Board *board) {
     while (1) {
         // Fetch raw command strings from GUI pipeline
         if (!fgets(line, sizeof(line), stdin)) {
-            continue;
+            break;
         }
 
         // Clean off line termination characters (\n)
