@@ -42,23 +42,23 @@ void printBoard(const Board *board) {
 void setStartpos(Board *board) {
     memset(board, 0, sizeof(Board));
 
-    board->pieces[0][0] = 0x000000000000FF00UL;
-    board->pieces[0][1] = 0x0000000000000042UL;
-    board->pieces[0][2] = 0x0000000000000024UL;
-    board->pieces[0][3] = 0x0000000000000081UL;
-    board->pieces[0][4] = 0x0000000000000008UL;
-    board->pieces[0][5] = 0x0000000000000010UL;
+    board->pieces[0][0] = 0x000000000000FF00ULL;
+    board->pieces[0][1] = 0x0000000000000042ULL;
+    board->pieces[0][2] = 0x0000000000000024ULL;
+    board->pieces[0][3] = 0x0000000000000081ULL;
+    board->pieces[0][4] = 0x0000000000000008ULL;
+    board->pieces[0][5] = 0x0000000000000010ULL;
 
-    board->pieces[1][0] = 0x00FF000000000000UL;
-    board->pieces[1][1] = 0x4200000000000000UL;
-    board->pieces[1][2] = 0x2400000000000000UL;
-    board->pieces[1][3] = 0x8100000000000000UL;
-    board->pieces[1][4] = 0x0800000000000000UL;
-    board->pieces[1][5] = 0x1000000000000000UL;
+    board->pieces[1][0] = 0x00FF000000000000ULL;
+    board->pieces[1][1] = 0x4200000000000000ULL;
+    board->pieces[1][2] = 0x2400000000000000ULL;
+    board->pieces[1][3] = 0x8100000000000000ULL;
+    board->pieces[1][4] = 0x0800000000000000ULL;
+    board->pieces[1][5] = 0x1000000000000000ULL;
 
-    board->allWhite = 0x000000000000FFFFUL;
-    board->allBlack = 0xFFFFFF0000000000UL;
-    board->all      = 0xFFFF00000000FFFFUL;
+    board->allWhite = 0x000000000000FFFFULL;
+    board->allBlack = 0xFFFFFF0000000000ULL;
+    board->all      = 0xFFFF00000000FFFFULL;
 
     board->isWhiteTurn = true;
     board->castleRights = 15;
@@ -101,7 +101,7 @@ void parseFen(Board *board, const char *fen) {
 
             if (type != -1) {
                 int square = rank * 8 + file;
-                board->pieces[color][type] |= (1UL << square);
+                board->pieces[color][type] |= (1ULL << square);
                 file++;
             }
         }

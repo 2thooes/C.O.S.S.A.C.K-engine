@@ -5,10 +5,10 @@
 #include "legalMoves.h"
 
 // Vertical masks
-const uint64_t NOT_A_FILE = 0xFEFEFEFEFEFEFEFEUL;
-const uint64_t NOT_H_FILE = 0x7F7F7F7F7F7F7F7FUL;
-const uint64_t NOT_AB_FILE = 0xFCFCFCFCFCFCFCFCUL;
-const uint64_t NOT_GH_FILE = 0x3F3F3F3F3F3F3F3FUL;
+const uint64_t NOT_A_FILE = 0xFEFEFEFEFEFEFEFEULL;
+const uint64_t NOT_H_FILE = 0x7F7F7F7F7F7F7F7FULL;
+const uint64_t NOT_AB_FILE = 0xFCFCFCFCFCFCFCFCULL;
+const uint64_t NOT_GH_FILE = 0x3F3F3F3F3F3F3F3FULL;
 
 void insertFirst(char *str, char moves[MAX_MOVES][MOVE_STR_LEN]){
 
@@ -52,7 +52,7 @@ void whitePawns(const Board *board, MovesStr* moves){
     uint64_t single_pushes = (white_pawns << 8) & empty_squares;
 
     // --- 2. Move 2 ---
-    uint64_t rank_4_mask = 0x00000000FF000000UL; // Маска 4-й горизонтали
+    uint64_t rank_4_mask = 0x00000000FF000000ULL; // Маска 4-й горизонтали
     uint64_t double_pushes = (single_pushes << 8) & empty_squares & rank_4_mask;
 
     // --- 3. Move to right diagonal ---
@@ -162,7 +162,7 @@ void blackPawns(const Board *board, MovesStr* moves){
     uint64_t single_pushes = (black_pawns >> 8) & empty_squares;
 
     // --- 2. Move 2 ---
-    uint64_t rank_5_mask = 0x000000FF00000000UL; // Маска 5-й горизонтали
+    uint64_t rank_5_mask = 0x000000FF00000000ULL; // Маска 5-й горизонтали
     uint64_t double_pushes = (single_pushes >> 8) & empty_squares & rank_5_mask;
 
     // --- 3. Move to right diagonal ---
@@ -173,7 +173,7 @@ void blackPawns(const Board *board, MovesStr* moves){
 
     // --- 5. EN PASSANT ---
     if (board->enPassant != -1) {
-        uint64_t ep_mask = 1UL << board->enPassant;
+        uint64_t ep_mask = 1ULL << board->enPassant;
 
         uint64_t ep_attacks_right = ((black_pawns & NOT_H_FILE) >> 7) & ep_mask;
         uint64_t ep_attacks_left  = ((black_pawns & NOT_A_FILE) >> 9) & ep_mask;
@@ -271,7 +271,7 @@ void knightMoves(const Board *board, MovesStr* moves) {
 
     while (knights) {
         int from_square = __builtin_ctzll(knights);
-        uint64_t knight_single = 1UL << from_square;
+        uint64_t knight_single = 1ULL << from_square;
 
         uint64_t attacks = 0;
         attacks |= (knight_single << 17) & NOT_A_FILE;
@@ -289,7 +289,7 @@ void knightMoves(const Board *board, MovesStr* moves) {
             int to_square = __builtin_ctzll(legal_attacks);
 
             if (isKingSafe(board, from_square, to_square, false)) {
-                bool is_capture = (1UL << to_square) & enemy_pieces;
+                bool is_capture = (1ULL << to_square) & enemy_pieces;
 
                 if (is_capture) {
                     coordsToMoveStr(from_square, to_square, moves->highMoves[moves->highCount], false);
@@ -328,7 +328,7 @@ void bishopMoves(const Board *board, MovesStr* moves) {
         int from_square = __builtin_ctzll(bishops);
 
         for (int d = 0; d < 4; d++) {
-            uint64_t current_square = 1UL << from_square;
+            uint64_t current_square = 1ULL << from_square;
             struct Direction dir = dirs[d];
 
             while (true) {
@@ -383,8 +383,8 @@ void rookMoves(const Board *board, MovesStr* moves) {
         uint64_t edge_mask;
         bool is_positive; 
     } dirs[4] = {
-        {8, 0xFFFFFFFFFFFFFFFFUL, true},  // Up
-        {8, 0xFFFFFFFFFFFFFFFFUL, false}, // Down
+        {8, 0xFFFFFFFFFFFFFFFFULL, true},  // Up
+        {8, 0xFFFFFFFFFFFFFFFFULL, false}, // Down
         {1, NOT_H_FILE, true},            // Right
         {1, NOT_A_FILE, false}            // Left
     };
@@ -393,7 +393,7 @@ void rookMoves(const Board *board, MovesStr* moves) {
         int from_square = __builtin_ctzll(rooks);
 
         for (int d = 0; d < 4; d++) {
-            uint64_t current_square = 1UL << from_square;
+            uint64_t current_square = 1ULL << from_square;
             struct RookDirection dir = dirs[d];
 
             while (true) {
@@ -477,7 +477,7 @@ void kingMoves(const Board *board, MovesStr* moves) {
     while (legal_attacks) {
         int to_square = __builtin_ctzll(legal_attacks);
         if (isKingSafe(board, from_square, to_square, false)) {
-            bool is_capture = (1UL << to_square) & enemy_pieces;
+            bool is_capture = (1ULL << to_square) & enemy_pieces;
 
             if (is_capture) {
                 coordsToMoveStr(from_square, to_square, moves->highMoves[moves->highCount], false);
@@ -494,7 +494,7 @@ void kingMoves(const Board *board, MovesStr* moves) {
     uint64_t all_pieces = board->all;
     if (board->isWhiteTurn) {
         // King side castling for white (e1g1)
-        if ((board->castleRights & 1) && !(all_pieces & (1UL << 5)) && !(all_pieces & (1UL << 6))) {
+        if ((board->castleRights & 1) && !(all_pieces & (1ULL << 5)) && !(all_pieces & (1ULL << 6))) {
             if (isKingSafe(board, 4, 4, false) &&
                 isKingSafe(board, 4, 5, false) &&
                 isKingSafe(board, 4, 6, false)) {
@@ -503,7 +503,7 @@ void kingMoves(const Board *board, MovesStr* moves) {
             }
         }
         // Queen side castling for white (e1c1)
-        if ((board->castleRights & 2) && !(all_pieces & (1UL << 1)) && !(all_pieces & (1UL << 2)) && !(all_pieces & (1UL << 3))) {
+        if ((board->castleRights & 2) && !(all_pieces & (1ULL << 1)) && !(all_pieces & (1ULL << 2)) && !(all_pieces & (1UL << 3))) {
             if (isKingSafe(board, 4, 4, false) &&
                 isKingSafe(board, 4, 3, false) &&
                 isKingSafe(board, 4, 2, false)) {
@@ -513,7 +513,7 @@ void kingMoves(const Board *board, MovesStr* moves) {
         }
     } else {
         // King side castling for black (e8g8)
-        if ((board->castleRights & 4) && !(all_pieces & (1UL << 61)) && !(all_pieces & (1UL << 62))) {
+        if ((board->castleRights & 4) && !(all_pieces & (1ULL << 61)) && !(all_pieces & (1ULL << 62))) {
             if (isKingSafe(board, 60, 60, false) &&
                 isKingSafe(board, 60, 61, false) &&
                 isKingSafe(board, 60, 62, false)) {
@@ -522,7 +522,7 @@ void kingMoves(const Board *board, MovesStr* moves) {
             }
         }
         // Queen side castling for black (e8c8)
-        if ((board->castleRights & 8) && !(all_pieces & (1UL << 57)) && !(all_pieces & (1UL << 58)) && !(all_pieces & (1UL << 59))) {
+        if ((board->castleRights & 8) && !(all_pieces & (1ULL << 57)) && !(all_pieces & (1ULL << 58)) && !(all_pieces & (1UL << 59))) {
             if (isKingSafe(board, 60, 60, false) &&
                 isKingSafe(board, 60, 59, false) &&
                 isKingSafe(board, 60, 58, false)) {
