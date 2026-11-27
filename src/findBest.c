@@ -8,12 +8,16 @@
 #include <sys/time.h>
 
 #define MATE_SCORE 1000000
+#define INF (INT_MAX - 1)
 
 #define MAX_DEPTH 64
 char pvTable[MAX_DEPTH][MAX_DEPTH][6]; // [глубина_узла][индекс_хода_в_линии]
 int pvLength[MAX_DEPTH];
 
 long nodeCount = 0;
+
+static int searchBudgetMs;
+static bool stopSearch;
 
 long getTimeMs() {
     struct timeval tv;
@@ -31,64 +35,45 @@ bool isInCheck(const Board *board, int us) {
 int quiescence(Board *board, int alpha, int beta)
 {
     nodeCount++;
-
     int side = board->isWhiteTurn ? 1 : -1;
-
     int standPat = evaluate(board) * side;
-
-
     // Если текущая позиция уже лучше beta
     if (standPat >= beta)
         return beta;
-
-
     // Поднимаем alpha
     if (standPat > alpha)
         alpha = standPat;
-
-
-
     char moves[MAX_MOVES][MOVE_STR_LEN];
     int moveCount = 0;
-
-
     // Только взятия
     attacksSearch(board, moves, &moveCount);
-
-
-
     for (int i = 0; i < moveCount; i++)
     {
         Board copy = *board;
-
         modifyBoard(&copy, moves[i]);
-
-
-        int score = -quiescence(
-            &copy,
-            -beta,
-            -alpha
-        );
-
-
+        int score = -quiescence(&copy,-beta,-alpha);
         if(score >= beta)
             return beta;
-
-
         if(score > alpha)
             alpha = score;
     }
-
-
     return alpha;
 }
 
-int negamax(Board *board, int depth, int alpha, int beta, int ply) {
+int negamax(Board *board, int depth, int alpha, int beta, int ply,long startTime) {
     nodeCount++;
+
+    if ((nodeCount & 2047) == 0 && searchBudgetMs > 0){
+        if (getTimeMs() - startTime >= searchBudgetMs){
+            stopSearch = true;
+            return 0;
+        }
+    }
+
     if (depth == 0) {
-    pvLength[ply] = 0;
-    return quiescence(board, alpha, beta);
-}
+        pvLength[ply] = 0;
+        return quiescence(board, alpha, beta);
+    }
 
     char moves[MAX_MOVES][MOVE_STR_LEN];
     int moveCount = 0;
@@ -109,7 +94,8 @@ int negamax(Board *board, int depth, int alpha, int beta, int ply) {
         Board copy = *board;
         modifyBoard(&copy, moves[i]);
 
-        int score = -negamax(&copy, depth - 1, -beta, -alpha, ply + 1);
+        int score = -negamax(&copy, depth - 1, -beta, -alpha, ply + 1,startTime);
+        if (stopSearch) return 0;
 
         if (score > best) {
             best = score;
@@ -130,19 +116,21 @@ int negamax(Board *board, int depth, int alpha, int beta, int ply) {
 }
 
 int findBest(Board *board, char moves[MAX_MOVES][MOVE_STR_LEN], int moveCount, int threads, int maxDepth, int timeBudgetMs) {
+    searchBudgetMs = timeBudgetMs;
+    
     if (moveCount <= 0) {
         return -1;
     }
 
     long startTime = getTimeMs();
     int bestIndex = 0;
+    stopSearch = false;
 
     for (int depth = 1; depth <= maxDepth; depth++) {
         long elapsedBeforeDepth = getTimeMs() - startTime;
         if (timeBudgetMs > 0 && elapsedBeforeDepth >= timeBudgetMs) {
             break;
         }
-
         // Простая эвристика: если прошлая глубина заняла X мс, следующая обычно займёт ~X*5-8 (branching factor)
         // Если даже пессимистичная оценка "не влезет" — не начинаем новую глубину
         if (timeBudgetMs > 0 && depth > 1) {
@@ -151,26 +139,28 @@ int findBest(Board *board, char moves[MAX_MOVES][MOVE_STR_LEN], int moveCount, i
                 break;
             }
         }
-
         nodeCount = 0;
         int currentBestIndex = 0;
         int bestScore = INT_MIN;
+        int alpha = -INF;
+        int beta  = INF;
 
         for (int i = 0; i < moveCount; i++) {
             Board copy = *board;
             modifyBoard(&copy, moves[i]);
 
-            int score = -negamax(&copy, depth - 1, INT_MIN + 1, INT_MAX - 1, 1);
+            int score = -negamax(&copy, depth - 1, -beta,-alpha, 1,startTime);
             printf("%s:%d\n",moves[i],score);
+            if (stopSearch) return 0;
 
             if (score > bestScore) {
                 bestScore = score;
                 currentBestIndex = i;
                 strcpy(pvTable[0][0], moves[i]);
-                memcpy(pvTable[0][1], pvTable[1][0], pvLength[1] * 6);
+                memcpy(pvTable[0][1], pvTable[1][0], pvLength[1] * 6);                  
                 pvLength[0] = pvLength[1] + 1;
             }
-
+            if (score > alpha) alpha = score;
             // Checking times
             if (timeBudgetMs > 0) {
                 long elapsedMs = getTimeMs() - startTime;

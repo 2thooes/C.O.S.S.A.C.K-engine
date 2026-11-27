@@ -1,9 +1,6 @@
 #include "evaluate.h"
 
-int evaluate(Board *board){
-    int evaluations[] = {100, 300, 300, 500, 900};
-
-    int knightEval[64] = {
+    static const int knightEval[64] = {
         -50,-40,-30,-30,-30,-30,-40,-50,
         -40,-20,  0,  0,  0,  0,-20,-40,
         -30,  0, 10, 15, 15, 10,  0,-30,
@@ -14,7 +11,7 @@ int evaluate(Board *board){
         -50,-40,-30,-30,-30,-30,-40,-50,
     };
 
-    int pawnEval[64] = {
+    static const int pawnEval[64] = {
         0,  0,  0,  0,  0,  0,  0,  0,
         50, 50, 50, 50, 50, 50, 50, 50,
         10, 10, 20, 30, 30, 20, 10, 10,
@@ -24,6 +21,11 @@ int evaluate(Board *board){
         0,-10,-10,-20,-20,-10,-10,  0,
         0,  0,  0,  0,  0,  0,  0,  0
     };
+
+int evaluate(Board *board){
+    int evaluations[] = {100, 300, 300, 500, 900};
+
+    
 
     int rawEval = 0;
 
